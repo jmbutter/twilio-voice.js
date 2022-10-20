@@ -284,6 +284,11 @@ class Device extends EventEmitter {
     return Device._audioContext;
   }
 
+  // /**
+  //  * An array of held {@link Call}s.
+  //  */
+  // private _heldCalls: Call[] = [];
+
   /**
    * The currently active {@link Call}, if there is one.
    */
@@ -554,6 +559,7 @@ class Device extends EventEmitter {
     this._throwIfDestroyed();
 
     if (this._activeCall) {
+      // TODO: HOLD THE CALL AND DEAL WITH IT
       throw new InvalidStateError('A Call is already active');
     }
 
@@ -573,11 +579,18 @@ class Device extends EventEmitter {
   }
 
   /**
-   * Return the calls that this {@link Device} is maintaining.
+   * Return the incoming calls that this {@link Device} is maintaining.
    */
   get calls(): Call[] {
     return this._calls;
   }
+
+  // /**
+  //  * Return the held calls that this {@link Device} is maintaining.
+  //  */
+  //  get heldCalls(): Call[] {
+  //   return this._heldCalls;
+  // }
 
   /**
    * Destroy the {@link Device}, freeing references to be garbage collected.
@@ -614,6 +627,9 @@ class Device extends EventEmitter {
   disconnectAll(): void {
     const calls = this._calls.splice(0);
     calls.forEach((call: Call) => call.disconnect());
+
+    // const heldCalls = this._heldCalls.splice(0);
+    // heldCalls.forEach((call: Call) => call.disconnect());
 
     if (this._activeCall) {
       this._activeCall.disconnect();
@@ -931,6 +947,33 @@ class Device extends EventEmitter {
       || call.outboundConnectionId === callSid) || null;
   }
 
+  // private _holdCall(callSid: string): Call | null {
+  //   const call: Call | null = this._findCall(callSid);
+
+  //   if(call) {
+  //     call.mute(true);
+  //     call.getRemoteStream()?.getAudioTracks().forEach(track => track.enabled = false);
+  //     this._heldCalls.push(call);
+  //   }
+    
+  //   return call;
+  // }
+
+  // private _unholdCall(callSid: string): Call | null {
+  //   const call: Call | null = this._findCall(callSid);
+
+  //   if(call) {
+  //     call.mute(false);
+  //     call.getRemoteStream()?.getAudioTracks().forEach(track => track.enabled = true);
+  //   }
+    
+  //   return call;
+  // }
+
+  setActiveCall(call: Call): void {
+    this._activeCall = call;
+  }
+
   /**
    * Create a new {@link Call}.
    * @param twimlParams - A flat object containing key:value pairs to be sent to the TwiML app.
@@ -955,14 +998,14 @@ class Device extends EventEmitter {
 
     options = Object.assign({
       MediaStream: this._options.MediaStream || rtc.PeerConnection,
-      beforeAccept: (currentCall: Call) => {
-        if (!this._activeCall || this._activeCall === currentCall) {
-          return;
-        }
+      // beforeAccept: (currentCall: Call) => {
+      //   if (!this._activeCall || this._activeCall === currentCall) {
+      //     return;
+      //   }
 
-        this._activeCall.disconnect();
-        this._removeCall(this._activeCall);
-      },
+      //   this._activeCall.disconnect();
+      //   this._removeCall(this._activeCall);
+      // },
       codecPreferences: this._options.codecPreferences,
       dialtonePlayer: Device._dialtonePlayer,
       dscp: this._options.dscp,
